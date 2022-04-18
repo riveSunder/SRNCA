@@ -89,6 +89,15 @@ class NCA(nn.Module):
 
         return temp
 
+    def count_parameters(self):
+
+        number_parameters = 0
+
+        for param in self.parameters():
+            number_parameters += param.numel()
+
+        return number_parameters
+
 
         
 if __name__ == "__main__":
