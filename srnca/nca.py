@@ -99,6 +99,13 @@ class NCA(nn.Module):
         return number_parameters
 
 
+    def save_parameters(self, save_path):
+
+        pass
+
+    def load_parameters(self, load_path):
+
+        pass
         
 if __name__ == "__main__":
 
