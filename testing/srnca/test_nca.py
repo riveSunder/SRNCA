@@ -39,9 +39,6 @@ class TestNCA(unittest.TestCase):
                 os.path.split(os.path.abspath(__file__))[0])[0])[0])
         save_path = os.path.join(root_path, "parameters", "temp_test.pt")
 
-        print("\n", root_path)
-        print(save_path)
-
         nca_0.save_parameters(save_path)
 
         nca_1.load_parameters(save_path)
@@ -49,7 +46,8 @@ class TestNCA(unittest.TestCase):
         for param_0, param_1 in zip(nca_0.parameters(), nca_1.parameters()):
             
             self.assertTrue(\
-                    np.allclose(param_0.detach().numpy(), param_1.detach().numpy()))
+                    np.allclose(param_0.detach().numpy(), \
+                    param_1.detach().numpy(), atol=1e-7))
 
 if __name__ == "__main__":
 

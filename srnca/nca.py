@@ -72,6 +72,7 @@ class NCA(nn.Module):
 
 
     def forward(self, grid, update_rate=0.5):
+    
 
         update_mask = (torch.rand_like(grid) < update_rate) * 1.0
         perception = perceive(grid, self.filters)
@@ -101,11 +102,13 @@ class NCA(nn.Module):
 
     def save_parameters(self, save_path):
 
-        pass
+        torch.save(self.state_dict(), save_path)
 
     def load_parameters(self, load_path):
 
-        pass
+        state_dict = torch.load(load_path)
+
+        self.load_state_dict(state_dict)
         
 if __name__ == "__main__":
 
