@@ -49,6 +49,19 @@ class TestNCA(unittest.TestCase):
                     np.allclose(param_0.detach().numpy(), \
                     param_1.detach().numpy(), atol=1e-7))
 
+        my_command = f"rm {save_path}"
+
+        os.system(my_command)
+
+    def test_fit(self):
+
+        nca = NCA(number_channels=3)
+
+        target = torch.rand(1,3,64,64)
+
+        nca.fit(target, max_steps=3, lr=1e-3, max_ca_steps=16, batch_size=4)
+
+
 if __name__ == "__main__":
 
     unittest.main(verbosity=2)

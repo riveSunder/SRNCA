@@ -11,6 +11,8 @@ import skimage
 import skimage.io as sio
 import skimage.transform
 
+from srnca.utils import compute_grams, perceive, compute_style_loss
+
 identity = torch.tensor([[0., 0., 0.],
                          [0., 1., 0.],
                          [0., 0., 0.]])
@@ -27,23 +29,8 @@ laplacian = torch.tensor([[1., 2., 1.],
                           [2., -12., 2],
                           [1., 2., 1.]])
 
-def perceive(x, filters):
-    
-    batch, channels, height, width = x.shape
-    
-    x = x.reshape(batch*channels, 1, height, width)
-    x = F.pad(x, (1,1,1,1), mode="circular")
-    
-    x = F.conv2d(x, filters[:, np.newaxis, :, :])
-    
-    perception = x.reshape(batch, -1, height, width)
-    
-    return perception
-
 # Parameters for soft clamp from chakazul
 soft_clamp = lambda x: 1.0 / (1.0 + torch.exp(-4.0 * (x-0.5)))
-
-
 
 class NCA(nn.Module):
 
@@ -89,6 +76,49 @@ class NCA(nn.Module):
         temp = torch.zeros(batch_size, self.number_channels, dim, dim)
 
         return temp
+
+    def initialize_optimizer(self, lr, max_steps):
+
+        self.optimizer = torch.optim.Adam(self.parameters(), lr=lr)
+        self.lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(\
+                self.optimizer, [max_steps // 3], 0.3)
+
+    def fit(self, target, max_steps=10, lr=1e-3, max_ca_steps=16, batch_size=8):
+
+        self.batch_size = batch_size
+        display_every = max_steps // 8 + 1
+
+        self.initialize_optimizer(lr, max_steps)
+
+        grids = self.get_init_grid(batch_size=self.batch_size, dim = target.shape[-2])
+
+        for step in range(max_steps):
+
+            with torch.no_grad():
+                batch_index = np.random.choice(len(grids), 4, replace=False)
+
+                x = grids
+
+                if step % 8 == 0:
+                    x[:1] = self.get_init_grid(batch_size=1, dim=x.shape[-2])
+
+
+            self.optimizer.zero_grad()
+
+            for ca_step in range(np.random.randint(1,16) + max_ca_steps):
+                x = self.forward(x)
+
+            grams_pred = compute_grams(x)
+            grams_target = compute_grams(target)
+
+            loss = compute_style_loss(grams_pred, grams_target)
+            loss.backward()
+
+            self.optimizer.step()
+            self.lr_scheduler.step()
+
+            if step % display_every == 0:
+                print(f"loss at step {step} = {loss:.4e}")
 
     def count_parameters(self):
 
