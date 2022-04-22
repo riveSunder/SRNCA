@@ -62,6 +62,6 @@ class TestNCA(unittest.TestCase):
         nca.fit(target, max_steps=3, lr=1e-3, max_ca_steps=16, batch_size=4)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": #pragma: no cover
 
     unittest.main(verbosity=2)

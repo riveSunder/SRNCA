@@ -8,6 +8,7 @@ bleach==5.0.0
 certifi==2021.10.8
 cffi==1.15.0
 charset-normalizer==2.0.12
+coverage==6.3.2
 cycler==0.11.0
 debugpy==1.6.0
 decorator==5.1.1

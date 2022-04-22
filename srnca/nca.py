@@ -140,7 +140,7 @@ class NCA(nn.Module):
 
         self.load_state_dict(state_dict)
         
-if __name__ == "__main__":
+if __name__ == "__main__": #pragma: no cover
 
     nca = NCA()
 
