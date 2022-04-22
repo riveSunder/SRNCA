@@ -22,7 +22,7 @@ class TestSeedAll(unittest.TestCase):
 
         np.random.seed(my_seed)
 
-        my_seeds = np.random.choice(np.arange(0, 1000), size=8, replace=False)
+        my_seeds = np.random.choice(np.arange(0, 100), size=8, replace=False)
 
         for my_seed in my_seeds:
 
@@ -90,13 +90,21 @@ class TestTensorToImage(unittest.TestCase):
         image_from_file = read_image(self.image_path, max_size=max_size)
 
         tensor_from_image = image_to_tensor(image_from_file) 
-
         self.assertEqual(len(tensor_from_image.shape), 4)
 
-        image_from_tensor_3d = tensor_to_image(tensor_from_image)
 
+        image_from_file = read_image(self.image_path, max_size=max_size)
+
+        tensor_from_2d_image = image_to_tensor(image_from_file[:,:,0]) 
+        self.assertEqual(len(tensor_from_2d_image.shape), 4)
+
+
+        image_from_file = read_image(self.image_path, max_size=max_size)
+
+        tensor_from_image = image_to_tensor(image_from_file) 
+        image_from_tensor_3d = tensor_to_image(tensor_from_image)
         self.assertEqual(len(image_from_tensor_3d.shape), 3)
 
-if __name__ == "__main__":
+if __name__ == "__main__": #pragma: no cover
     
     unittest.main(verbosity=2)
