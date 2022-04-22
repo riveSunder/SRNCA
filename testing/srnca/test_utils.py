@@ -10,7 +10,6 @@ from srnca.utils import seed_all, \
         tensor_to_image, \
         image_to_tensor
 
-
 class TestSeedAll(unittest.TestCase):
 
     def setUp(self):
@@ -56,7 +55,6 @@ class TestReadImage(unittest.TestCase):
     def setUp(self):
         pass
 
-
     def test_read_image(self):
 
         # this level of testing is two levels down from root
@@ -92,12 +90,10 @@ class TestTensorToImage(unittest.TestCase):
         tensor_from_image = image_to_tensor(image_from_file) 
         self.assertEqual(len(tensor_from_image.shape), 4)
 
-
         image_from_file = read_image(self.image_path, max_size=max_size)
 
         tensor_from_2d_image = image_to_tensor(image_from_file[:,:,0]) 
         self.assertEqual(len(tensor_from_2d_image.shape), 4)
-
 
         image_from_file = read_image(self.image_path, max_size=max_size)
 
