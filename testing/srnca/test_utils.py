@@ -57,7 +57,7 @@ class TestReadImage(unittest.TestCase):
 
     def test_read_image(self):
 
-        # this level of testing is two levels down from root
+        # file resides in folder two levels down from srnca root
         file_path = os.path.join("/", *os.path.abspath(__file__).split("/")[:-3])
 
         image_path = os.path.join(file_path, "data", "images", \
