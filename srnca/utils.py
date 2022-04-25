@@ -43,14 +43,9 @@ def compute_grams(imgs):
     #mean = torch.tensor([0.485, 0.456, 0.406])[:,None,None]
     #std = torch.tensor([0.229, 0.224, 0.225])[:,None,None]
 
+    img_mean = (1e-9 + imgs).mean(dim=(0,2,3))[None,:,None, None]
 
-    mean = torch.tensor([0.45] * imgs.shape[1]) 
-    
-    mean = (1e-9 + imgs).mean(dim=(0,2,3))
-
-    mean = mean[None,:,None, None]
-
-    x = (imgs-mean) / imgs.std()
+    x = (imgs-img_mean) / imgs.std()
     
     grams = []
 
