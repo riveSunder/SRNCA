@@ -87,19 +87,25 @@ class TestTensorToImage(unittest.TestCase):
 
         image_from_file = read_image(self.image_path, max_size=max_size)
 
+        # tensor from rgb image
         tensor_from_image = image_to_tensor(image_from_file) 
         self.assertEqual(len(tensor_from_image.shape), 4)
 
-        image_from_file = read_image(self.image_path, max_size=max_size)
-
+        # tensor from monochrome image
         tensor_from_2d_image = image_to_tensor(image_from_file[:,:,0]) 
         self.assertEqual(len(tensor_from_2d_image.shape), 4)
 
-        image_from_file = read_image(self.image_path, max_size=max_size)
-
-        tensor_from_image = image_to_tensor(image_from_file) 
+        # rgb image tensor case
         image_from_tensor_3d = tensor_to_image(tensor_from_image)
         self.assertEqual(len(image_from_tensor_3d.shape), 3)
+
+        # monochrome image tensor case
+        image_from_tensor_2d = tensor_to_image(tensor_from_2d_image)
+        self.assertEqual(len(image_from_tensor_2d.shape), 2)
+
+        # multichannel tensor case
+        image_from_tensor_multi = tensor_to_image(torch.rand(1,32,16,17))
+        self.assertEqual(len(image_from_tensor_multi.shape), 3)
 
 if __name__ == "__main__": #pragma: no cover
     

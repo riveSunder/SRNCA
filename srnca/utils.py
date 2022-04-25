@@ -89,8 +89,13 @@ def image_to_tensor(img):
 
 def tensor_to_image(my_tensor, index=0):
 
-    img = my_tensor[index,...].permute(1,2,0).detach().numpy()
-    
+    if my_tensor.shape[1] >= 3:
+        # rgb or rgba images, convert to rgb
+        img = my_tensor[index,:3,:,:].permute(1,2,0).detach().numpy()
+    else:
+        # monochrome images
+        img = my_tensor[index,0,:,:]
+
     return img
 
 def perceive(x, filters):
