@@ -39,12 +39,28 @@ def compute_grams(imgs):
     
     # from https://github.com/google-research/self-organising-systems
     # no idea why
-    mean = torch.tensor([0.485, 0.456, 0.406])[:,None,None]
-    std = torch.tensor([0.229, 0.224, 0.225])[:,None,None]
-    x = (imgs-mean) / std
+    # -> removed, left as comment as a reminder to look into it.
+    #mean = torch.tensor([0.485, 0.456, 0.406])[:,None,None]
+    #std = torch.tensor([0.229, 0.224, 0.225])[:,None,None]
+
+    img_mean = (1e-9 + imgs).mean(dim=(0,2,3))[None,:,None, None]
+
+    x = (imgs-img_mean) / imgs.std()
     
     grams = []
+
+    if x.shape[1] != 3: 
+        # random matrix adapter for single or multichannel tensors
+        restore_seed = torch.seed()
+        torch.manual_seed(42)
+        w_adapter = torch.rand( 3, x.shape[1], 1,1) #3, 3)
+
+        x = F.conv2d(x, w_adapter) #, padding=1, padding_mode="circular")
+
+        torch.manual_seed(restore_seed)
+
     for i, layer in enumerate(vgg16[:max(style_layers)+1]):
+
         x = layer(x)
         if i in style_layers:
             
@@ -89,8 +105,13 @@ def image_to_tensor(img):
 
 def tensor_to_image(my_tensor, index=0):
 
-    img = my_tensor[index,...].permute(1,2,0).detach().numpy()
-    
+    if my_tensor.shape[1] == 1:
+        # rgb or rgba images, convert to rgb
+        img = my_tensor[index,0,:,:]
+    else:
+        # monochrome images
+        img = my_tensor[index,:3,:,:].permute(1,2,0).detach().numpy()
+
     return img
 
 def perceive(x, filters):

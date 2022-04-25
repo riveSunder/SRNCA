@@ -8,7 +8,8 @@ import torch
 from srnca.utils import seed_all, \
         read_image, \
         tensor_to_image, \
-        image_to_tensor
+        image_to_tensor, \
+        compute_grams
 
 class TestSeedAll(unittest.TestCase):
 
@@ -87,19 +88,50 @@ class TestTensorToImage(unittest.TestCase):
 
         image_from_file = read_image(self.image_path, max_size=max_size)
 
+        # tensor from rgb image
         tensor_from_image = image_to_tensor(image_from_file) 
         self.assertEqual(len(tensor_from_image.shape), 4)
 
-        image_from_file = read_image(self.image_path, max_size=max_size)
-
+        # tensor from monochrome image
         tensor_from_2d_image = image_to_tensor(image_from_file[:,:,0]) 
         self.assertEqual(len(tensor_from_2d_image.shape), 4)
 
-        image_from_file = read_image(self.image_path, max_size=max_size)
-
-        tensor_from_image = image_to_tensor(image_from_file) 
+        # rgb image tensor case
         image_from_tensor_3d = tensor_to_image(tensor_from_image)
         self.assertEqual(len(image_from_tensor_3d.shape), 3)
+
+        # monochrome image tensor case
+        image_from_tensor_2d = tensor_to_image(tensor_from_2d_image)
+        self.assertEqual(len(image_from_tensor_2d.shape), 2)
+
+        # multichannel tensor case
+        image_from_tensor_multi = tensor_to_image(torch.rand(1,32,16,17))
+        self.assertEqual(len(image_from_tensor_multi.shape), 3)
+
+
+class TestComputeGrams(unittest.TestCase):
+
+    def setUp(self):
+        pass
+
+    def test_compute_grams(self):
+
+        for number_channels in [1,3,7,16]:
+
+            temp_a = torch.rand(16, number_channels, 32, 33)
+            temp_b = torch.rand(16, number_channels, 32, 33)
+
+            grams_a = compute_grams(temp_a)
+            grams_aa = compute_grams(temp_a)
+            grams_b = compute_grams(temp_b)
+
+            for gram_a, gram_aa in zip(grams_a, grams_aa):
+                self.assertTrue(torch.all(gram_aa == gram_a))
+
+            for gram_a, gram_b in zip(grams_a, grams_b):
+                self.assertFalse(torch.all(gram_a == gram_b))
+            
+
 
 if __name__ == "__main__": #pragma: no cover
     
