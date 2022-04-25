@@ -44,10 +44,13 @@ def compute_grams(imgs):
     #std = torch.tensor([0.229, 0.224, 0.225])[:,None,None]
 
 
-    mean = imgs.mean(dim=0).mean(dim=-1).mean(dim=-1)[:,None,None]
-    std = imgs.std(dim=0).std(dim=-1).std(dim=-1)[:,None,None]
+    mean = torch.tensor([0.45] * imgs.shape[1]) 
+    
+    mean = (1e-9 + imgs).mean(dim=(0,2,3))
 
-    x = (imgs-mean) / std
+    mean = mean[None,:,None, None]
+
+    x = (imgs-mean) / imgs.std()
     
     grams = []
 
@@ -107,12 +110,12 @@ def image_to_tensor(img):
 
 def tensor_to_image(my_tensor, index=0):
 
-    if my_tensor.shape[1] >= 3:
+    if my_tensor.shape[1] == 1:
         # rgb or rgba images, convert to rgb
-        img = my_tensor[index,:3,:,:].permute(1,2,0).detach().numpy()
+        img = my_tensor[index,0,:,:]
     else:
         # monochrome images
-        img = my_tensor[index,0,:,:]
+        img = my_tensor[index,:3,:,:].permute(1,2,0).detach().numpy()
 
     return img
 
