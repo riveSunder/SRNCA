@@ -44,7 +44,19 @@ def compute_grams(imgs):
     x = (imgs-mean) / std
     
     grams = []
+
+    if x.shape[1] != 3: 
+        # random matrix adapter for single or multichannel tensors
+        restore_seed = torch.seed()
+        torch.manual_seed(42)
+        w_adapter = torch.rand( 3, x.shape[1], 1,1) #3, 3)
+
+        x = F.conv2d(x, w_adapter) #, padding=1, padding_mode="circular")
+
+        torch.manual_seed(restore_seed)
+
     for i, layer in enumerate(vgg16[:max(style_layers)+1]):
+
         x = layer(x)
         if i in style_layers:
             
