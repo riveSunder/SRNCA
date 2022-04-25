@@ -39,8 +39,14 @@ def compute_grams(imgs):
     
     # from https://github.com/google-research/self-organising-systems
     # no idea why
-    mean = torch.tensor([0.485, 0.456, 0.406])[:,None,None]
-    std = torch.tensor([0.229, 0.224, 0.225])[:,None,None]
+    # -> removed, left as comment as a reminder to look into it.
+    #mean = torch.tensor([0.485, 0.456, 0.406])[:,None,None]
+    #std = torch.tensor([0.229, 0.224, 0.225])[:,None,None]
+
+
+    mean = imgs.mean(dim=0).mean(dim=-1).mean(dim=-1)[:,None,None]
+    std = imgs.std(dim=0).std(dim=-1).std(dim=-1)[:,None,None]
+
     x = (imgs-mean) / std
     
     grams = []
