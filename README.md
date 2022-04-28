@@ -1,6 +1,6 @@
 # SRNCA
 **S**ymbolic **R**egression **N**eural **C**ellular **A**utomata
-### This is a research library for symbolic regression with inductive biases from cellular automata. It uses symbolic regression to approximate the learned functions found with the CA with mathematical functions, in hopes of finding some interesting patterns.
+### This is a research library for symbolic regression with inductive biases from cellular automata.
 
 ## To set it up:
 
