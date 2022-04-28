@@ -23,6 +23,12 @@ or:
 python3 -m venv my_env
 ```
 
+and then activate your virtual environment:
+
+```
+source my_env/bin/activate
+```
+
 Install the dependancies using the requirements text file:
 
 ```
