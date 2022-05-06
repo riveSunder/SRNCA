@@ -23,7 +23,7 @@ or:
 python3 -m venv my_env
 ```
 
-Install the dependancies using the requirements text file:
+Install the dependencies using the requirements text file:
 
 ```
 pip install -r requirements.txt
