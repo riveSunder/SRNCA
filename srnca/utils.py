@@ -46,7 +46,7 @@ def compute_grams(imgs):
     img_mean = (1e-9 + imgs).mean(dim=(0,2,3))[None,:,None, None]
 
     #x = (imgs-img_mean) / imgs.std()
-    x = (imgs - 0.445) / 0.226
+    x = imgs #(imgs - 0.445) / 0.226
     
     grams = []
 
