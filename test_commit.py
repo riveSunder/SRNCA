@@ -20,14 +20,15 @@ def test_commit(): #pragma: no cover
 
 
     
-    if os.path.exists("README.md"):
-        with open("README.md", "r") as f:
-            lines = f.readlines()
+    if 0: # not writing to README for now
+        if os.path.exists("README.md"):
+            with open("README.md", "r") as f:
+                lines = f.readlines()
 
-        with open("README.md", "a") as f:
-            f.writelines(coverage_summary)
-    else:
-        print("no README.md found")
+            with open("README.md", "a") as f:
+                f.writelines(coverage_summary)
+        else:
+            print("no README.md found")
 
     git_add_command = "git add coverage.txt"
     commit_command = f"git commit -m 'test commit summary: {coverage_summary}'"

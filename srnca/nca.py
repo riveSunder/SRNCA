@@ -55,13 +55,15 @@ class NCA(nn.Module):
         self.max_value = 1.0
         self.min_value = 0.0
 
+        self.update_rate = 0.9
+
         self.squash = soft_clamp
 
 
-    def forward(self, grid, update_rate=0.5):
+    def forward(self, grid):
     
 
-        update_mask = (torch.rand_like(grid) < update_rate) * 1.0
+        update_mask = (torch.rand_like(grid) < self.update_rate) * 1.0
         perception = perceive(grid, self.filters)
 
         new_grid = self.conv_0(perception)
@@ -113,6 +115,10 @@ class NCA(nn.Module):
 
             loss = compute_style_loss(grams_pred, grams_target)
             loss.backward()
+
+            for p in self.parameters():
+                p.grad /= (p.grad.norm()+1e-8)
+
 
             self.optimizer.step()
             self.lr_scheduler.step()
