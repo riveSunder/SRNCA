@@ -34,13 +34,14 @@ soft_clamp = lambda x: 1.0 / (1.0 + torch.exp(-4.0 * (x-0.5)))
 
 class NCA(nn.Module):
 
-    def __init__(self, number_channels=1, number_filters=5, number_hidden=32):
+    def __init__(self, number_channels=1, number_filters=5, number_hidden=32, device="cpu"):
         super().__init__()
 
         self.number_channels = number_channels
         self.number_filters = number_filters
         self.number_hidden = number_hidden
 
+        self.my_device = torch.device(device)
 
         self.conv_0 = nn.Conv2d(self.number_channels * self.number_filters, \
                 self.number_hidden, kernel_size=1)
@@ -50,6 +51,8 @@ class NCA(nn.Module):
                 moore, laplacian])
 
         self.conv_1.weight.data.zero_()
+
+        self.to_device(self.my_device)
 
         self.dt = 1.0
         self.max_value = 1.0
@@ -62,8 +65,8 @@ class NCA(nn.Module):
 
     def forward(self, grid):
     
+        update_mask = (torch.rand_like(grid, device=self.my_device) < self.update_rate) * 1.0
 
-        update_mask = (torch.rand_like(grid) < self.update_rate) * 1.0
         perception = perceive(grid, self.filters)
 
         new_grid = self.conv_0(perception)
@@ -76,6 +79,7 @@ class NCA(nn.Module):
     def get_init_grid(self, batch_size=8, dim=128):
         
         temp = torch.zeros(batch_size, self.number_channels, dim, dim)
+        temp = temp.to(self.my_device)
 
         return temp
 
@@ -135,6 +139,21 @@ class NCA(nn.Module):
 
         return number_parameters
 
+
+    def to_device(self, my_device):
+
+        
+        if "cuda" in torch.device(my_device).type \
+                and torch.cuda.is_available():
+            self.my_device= torch.device(my_device)
+        elif "cuda" in torch.device(my_device).type:
+            print(f"warning, cuda not found but{my_device} specified, falling back to cpu")
+            self.my_device = torch.device("cpu")
+        else:
+            self.my_device = torch.device(my_device)
+
+        self.to(self.my_device)
+        selt.filter.to(self.my_device)
 
     def save_parameters(self, save_path):
 

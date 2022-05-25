@@ -33,9 +33,10 @@ def seed_all(my_seed=42):
     torch.manual_seed(my_seed)
     np.random.seed(my_seed)
 
-def compute_grams(imgs):
+def compute_grams(imgs, device="cpu"):
     
     style_layers = [1, 6, 11, 18, 25]  
+    vgg16.to(torch.device(device))
     
     # from https://github.com/google-research/self-organising-systems
     # no idea why
@@ -54,7 +55,7 @@ def compute_grams(imgs):
         # random matrix adapter for single or multichannel tensors
         restore_seed = torch.seed()
         torch.manual_seed(42)
-        w_adapter = torch.rand( 3, x.shape[1], 1,1) #3, 3)
+        w_adapter = torch.rand( 3, x.shape[1], 1,1, device=torch.device(device)) #3, 3)
 
         x = F.conv2d(x, w_adapter) #, padding=1, padding_mode="circular")
 
@@ -95,23 +96,25 @@ def read_image(url, max_size=None):
     
     return img
 
-def image_to_tensor(img):
+def image_to_tensor(img, device="cpu"):
 
     if len(img.shape) == 2:
-        my_tensor = torch.tensor(img[np.newaxis, np.newaxis, ...])
+        my_tensor = torch.tensor(img[np.newaxis, np.newaxis, ...], \
+                device=torch.device(device))
     elif len(img.shape) == 3:
-        my_tensor = torch.tensor(img.transpose(2,0,1)[np.newaxis,...])
+        my_tensor = torch.tensor(img.transpose(2,0,1)[np.newaxis,...], \
+                device=torch.device(device))
     
-    return my_tensor
+    return my_tensor#.to(torch.device(device))
 
 def tensor_to_image(my_tensor, index=0):
 
     if my_tensor.shape[1] == 1:
         # rgb or rgba images, convert to rgb
-        img = my_tensor[index,0,:,:]
+        img = my_tensor[index,0,:,:].detach().cpu().numpy()
     else:
         # monochrome images
-        img = my_tensor[index,:3,:,:].permute(1,2,0).detach().numpy()
+        img = my_tensor[index,:3,:,:].permute(1,2,0).detach().cpu().numpy()
 
     return img
 
