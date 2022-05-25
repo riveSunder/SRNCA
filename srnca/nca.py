@@ -117,8 +117,8 @@ class NCA(nn.Module):
             for ca_step in range(np.random.randint(1,16) + max_ca_steps):
                 x = self.forward(x)
 
-            grams_pred = compute_grams(x)
-            grams_target = compute_grams(target)
+            grams_pred = compute_grams(x, device=self.my_device)
+            grams_target = compute_grams(target, device=self.my_device)
 
             loss = compute_style_loss(grams_pred, grams_target)
             loss.backward()
