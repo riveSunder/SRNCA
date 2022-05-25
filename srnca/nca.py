@@ -153,7 +153,7 @@ class NCA(nn.Module):
             self.my_device = torch.device(my_device)
 
         self.to(self.my_device)
-        selt.filter.to(self.my_device)
+        self.filters.to(self.my_device)
 
     def save_parameters(self, save_path):
 
