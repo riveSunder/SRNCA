@@ -88,9 +88,13 @@ def read_image(url, max_size=None):
     
     img = sio.imread(url)
     
+    dim_x, dim_y = img.shape[0], img.shape[1]
+
+    min_dim = min([dim_x, dim_y])
+    img = img[:min_dim, :min_dim]
+
     if max_size is not None:
         img = skimage.transform.resize(img, (max_size, max_size))
-    
    
     img = np.float32(img)/ img.max()
     

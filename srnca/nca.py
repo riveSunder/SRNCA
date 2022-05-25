@@ -78,8 +78,9 @@ class NCA(nn.Module):
 
     def get_init_grid(self, batch_size=8, dim=128):
         
-        temp = torch.zeros(batch_size, self.number_channels, dim, dim)
-        temp = temp.to(self.my_device)
+        temp = torch.zeros(batch_size, self.number_channels, dim, dim, \
+                device=self.my_device)
+        #temp = temp.to(self.my_device)
 
         return temp
 
@@ -95,8 +96,10 @@ class NCA(nn.Module):
         display_every = max_steps // 8 + 1
 
         self.initialize_optimizer(lr, max_steps)
+        target = target.to(self.my_device)
 
-        grids = self.get_init_grid(batch_size=self.batch_size, dim = target.shape[-2])
+        grids = self.get_init_grid(batch_size=self.batch_size,\
+                 dim = target.shape[-2], device=self.my_device)
 
         for step in range(max_steps):
 
@@ -153,7 +156,7 @@ class NCA(nn.Module):
             self.my_device = torch.device(my_device)
 
         self.to(self.my_device)
-        self.filters.to(self.my_device)
+        self.filters = self.filters.to(self.my_device)
 
     def save_parameters(self, save_path):
 
