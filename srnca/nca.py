@@ -99,7 +99,7 @@ class NCA(nn.Module):
         target = target.to(self.my_device)
 
         grids = self.get_init_grid(batch_size=self.batch_size,\
-                 dim = target.shape[-2], device=self.my_device)
+                 dim = target.shape[-2])
 
         for step in range(max_steps):
 
