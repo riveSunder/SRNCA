@@ -53,13 +53,40 @@ class TestNCA(unittest.TestCase):
 
         os.system(my_command)
 
+    def test_to_device(self):
+
+        nca = NCA()
+        nca.to_device("cpu")
+        nca.to_device("cuda")
+        
+
     def test_fit(self):
 
         nca = NCA(number_channels=3)
 
         target = torch.rand(1,3,64,64)
 
-        nca.fit(target, max_steps=3, lr=1e-3, max_ca_steps=16, batch_size=4)
+        this_filepath = os.path.realpath(__file__)
+        temp_tag = os.path.split(this_filepath)[0]
+
+        temp_tag = os.path.join(temp_tag, "temp")
+        nca.fit(target, max_steps=3, lr=1e-3, max_ca_steps=16, batch_size=4, exp_tag=temp_tag)
+
+
+        find_log = False
+        find_params = False
+        for elem in os.listdir(os.path.split(this_filepath)[0]):
+            if elem.startswith("temp") and elem.endswith(".npy"):
+                find_log = True
+            if elem.startswith("temp") and elem.endswith(".pt"):
+                find_params = True
+
+        self.assertTrue(find_log)
+        self.assertTrue(find_params)
+        import pdb; pdb.set_trace()
+        os.system(f"rm {os.path.split(this_filepath)[0]}/temp*_log_dict.npy")
+        os.system(f"rm {os.path.split(this_filepath)[0]}/temp*.pt")
+
 
 
 if __name__ == "__main__": #pragma: no cover

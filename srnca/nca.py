@@ -1,3 +1,4 @@
+import time
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -96,10 +97,16 @@ class NCA(nn.Module):
         self.lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(\
                 self.optimizer, [max_steps // 3], 0.3)
 
-    def save_log(self, my_training):
-        pass
+    def save_log(self, my_training, exp_tag=""):
+        
+        exp_tag += "_" + str(int(time.time()))
 
-    def fit(self, target, max_steps=10, lr=1e-3, max_ca_steps=16, batch_size=8):
+        np.save(f"{exp_tag}_log_dict.npy", my_training)
+        self.save_parameters(save_path = f"{exp_tag}_model.pt")
+
+        return exp_tag
+
+    def fit(self, target, max_steps=10, lr=1e-3, max_ca_steps=16, batch_size=8, exp_tag="default_tag"):
 
         self.batch_size = batch_size
         display_every = max_steps // 8 + 1
@@ -155,7 +162,7 @@ class NCA(nn.Module):
             my_training["loss"].append(loss)
             my_training["step"].append(step)
 
-            self.save_log(my_training)
+            _ = self.save_log(my_training, exp_tag)
 
     def count_parameters(self):
 
