@@ -16,6 +16,9 @@ from srnca.utils import compute_grams, perceive, compute_style_loss
 identity = torch.tensor([[0., 0., 0.],
                          [0., 1., 0.],
                          [0., 0., 0.]])
+laplacian = torch.tensor([[1., 2., 1.],
+                          [2., -12., 2],
+                          [1., 2., 1.]])
 sobel_h = torch.tensor([[-1., -1., -1.],
                         [0., 0., 0.],
                         [1., 1., 1.]])
@@ -25,9 +28,6 @@ sobel_w = torch.tensor([[-1., 0., 1.],
 moore = torch.tensor([[1., 1., 1.],
                       [1., 0., 1.] ,
                       [1., 1., 1.]])
-laplacian = torch.tensor([[1., 2., 1.],
-                          [2., -12., 2],
-                          [1., 2., 1.]])
 
 # Parameters for soft clamp from chakazul
 soft_clamp = lambda x: 1.0 / (1.0 + torch.exp(-4.0 * (x-0.5)))
@@ -38,17 +38,23 @@ class NCA(nn.Module):
         super().__init__()
 
         self.number_channels = number_channels
-        self.number_filters = number_filters
         self.number_hidden = number_hidden
 
         self.my_device = torch.device(device)
 
+        self.filters = torch.stack([identity, laplacian, sobel_h, sobel_w, \
+                moore][:min([5, number_filters])])
+
+        # max filters is 20
+        number_filters = min([number_filters, 20])
+        while self.filters.shape[0] < number_filters:
+            self.filters = torch.cat([self.filters, torch.randn_like(self.filters[0:1])])
+
+        self.number_filters = self.filters.shape[0]
         self.conv_0 = nn.Conv2d(self.number_channels * self.number_filters, \
                 self.number_hidden, kernel_size=1)
         self.conv_1 = nn.Conv2d(self.number_hidden, self.number_channels, \
                 kernel_size=1, bias=False)
-        self.filters = torch.stack([identity, sobel_h, sobel_w, \
-                moore, laplacian])
 
         self.conv_1.weight.data.zero_()
 
@@ -90,6 +96,9 @@ class NCA(nn.Module):
         self.lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(\
                 self.optimizer, [max_steps // 3], 0.3)
 
+    def save_log(self, my_training):
+        pass
+
     def fit(self, target, max_steps=10, lr=1e-3, max_ca_steps=16, batch_size=8):
 
         self.batch_size = batch_size
@@ -101,6 +110,16 @@ class NCA(nn.Module):
         grids = self.get_init_grid(batch_size=self.batch_size,\
                  dim = target.shape[-2])
 
+        my_training = {}
+        my_training["lr"] = lr
+        my_training["max_ca_steps"] = max_ca_steps
+        my_training["batch_size"] = batch_size
+        my_training["number_channels"] = self.number_channels
+        my_training["number_hidden_channels"] = self.number_hidden
+
+        my_training["step"] = []
+        my_training["loss"] = []
+    
         for step in range(max_steps):
 
             with torch.no_grad():
@@ -132,6 +151,11 @@ class NCA(nn.Module):
 
             if step % display_every == 0:
                 print(f"loss at step {step} = {loss:.4e}")
+            
+            my_training["loss"].append(loss)
+            my_training["step"].append(step)
+
+            self.save_log(my_training)
 
     def count_parameters(self):
 
@@ -150,7 +174,7 @@ class NCA(nn.Module):
                 and torch.cuda.is_available():
             self.my_device= torch.device(my_device)
         elif "cuda" in torch.device(my_device).type:
-            print(f"warning, cuda not found but{my_device} specified, falling back to cpu")
+            print(f"warning, cuda not found but {my_device} specified, falling back to cpu")
             self.my_device = torch.device("cpu")
         else:
             self.my_device = torch.device(my_device)

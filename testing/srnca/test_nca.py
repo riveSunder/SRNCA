@@ -16,7 +16,7 @@ class TestNCA(unittest.TestCase):
 
         for hidden in [2,8,32,64]:
             for channels in [1,3,5,15]:
-                for filters in [3,4,5]:
+                for filters in [3,4,5, 15]:
 
                     expected_value = channels * hidden * filters \
                             +  hidden + hidden*channels
