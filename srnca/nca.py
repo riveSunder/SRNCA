@@ -99,7 +99,6 @@ class NCA(nn.Module):
 
     def save_log(self, my_training, exp_tag=""):
         
-        exp_tag += "_" + str(int(time.time()))
 
         np.save(f"{exp_tag}_log_dict.npy", my_training)
         self.save_parameters(save_path = f"{exp_tag}_model.pt")
@@ -116,6 +115,8 @@ class NCA(nn.Module):
 
         grids = self.get_init_grid(batch_size=self.batch_size,\
                  dim = target.shape[-2])
+
+        exp_tag += "_" + str(int(time.time()))
 
         my_training = {}
         my_training["lr"] = lr
@@ -140,7 +141,7 @@ class NCA(nn.Module):
 
             self.optimizer.zero_grad()
 
-            for ca_step in range(np.random.randint(1,16) + max_ca_steps):
+            for ca_step in range(np.random.randint(10, max_ca_steps)):
                 x = self.forward(x)
 
             grams_pred = compute_grams(x, device=self.my_device)
@@ -159,10 +160,12 @@ class NCA(nn.Module):
             if step % display_every == 0:
                 print(f"loss at step {step} = {loss:.4e}")
             
-            my_training["loss"].append(loss)
+            my_training["loss"].append(loss.item())
             my_training["step"].append(step)
 
             _ = self.save_log(my_training, exp_tag)
+        
+        return f"{_}_log_dict.npy"
 
     def count_parameters(self):
 
