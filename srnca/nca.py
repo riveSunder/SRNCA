@@ -12,7 +12,9 @@ import skimage
 import skimage.io as sio
 import skimage.transform
 
-from srnca.utils import compute_grams, perceive, compute_style_loss
+from srnca.utils import compute_grams, perceive, \
+        compute_style_loss, read_image, \
+        image_to_tensor, tensor_to_image
 
 identity = torch.tensor([[0., 0., 0.],
                          [0., 1., 0.],
@@ -108,12 +110,13 @@ class NCA(nn.Module):
     def fit(self, target, max_steps=10, lr=1e-3, max_ca_steps=16, batch_size=8, exp_tag="default_tag"):
 
         self.batch_size = batch_size
+        self.number_samples = batch_size * 64
         display_every = max_steps // 8 + 1
 
         self.initialize_optimizer(lr, max_steps)
         target = target.to(self.my_device)
 
-        grids = self.get_init_grid(batch_size=self.batch_size,\
+        grids = self.get_init_grid(batch_size=self.number_samples,\
                  dim = target.shape[-2])
 
         exp_tag += "_" + str(int(time.time()))
@@ -131,9 +134,9 @@ class NCA(nn.Module):
         for step in range(max_steps):
 
             with torch.no_grad():
-                batch_index = np.random.choice(len(grids), 4, replace=False)
+                batch_index = np.random.choice(len(grids), self.batch_size, replace=True)
 
-                x = grids
+                x = grids[batch_index]
 
                 if step % 8 == 0:
                     x[:1] = self.get_init_grid(batch_size=1, dim=x.shape[-2])
@@ -156,6 +159,8 @@ class NCA(nn.Module):
 
             self.optimizer.step()
             self.lr_scheduler.step()
+            
+            grids[batch_index] = x.detach()
 
             if step % display_every == 0:
                 print(f"loss at step {step} = {loss:.4e}")
@@ -180,12 +185,10 @@ class NCA(nn.Module):
     def to_device(self, my_device):
 
         
-        if "cuda" in torch.device(my_device).type \
-                and torch.cuda.is_available():
-            self.my_device= torch.device(my_device)
-        elif "cuda" in torch.device(my_device).type:
-            print(f"warning, cuda not found but {my_device} specified, falling back to cpu")
-            self.my_device = torch.device("cpu")
+        if "cuda" in torch.device(my_device).type:
+            print("") if "cpu" == torch.device(my_device).type else \
+                    print(f"warning, cuda not found but {my_device} specified, falling back to cpu")
+            self.my_device = torch.device(my_device) if torch.cuda.is_available() else torch.device("cpu")
         else:
             self.my_device = torch.device(my_device)
 
@@ -204,12 +207,23 @@ class NCA(nn.Module):
         
 if __name__ == "__main__": #pragma: no cover
 
-    nca = NCA()
+    url = "https://www.nasa.gov/centers/ames/images/content/72511main_cellstructure8.jpeg"
 
-    grid = nca.get_init_grid()
+    img = read_image(url, max_size=128)[:,:,:3]
+    target = image_to_tensor(img)
 
-    for step in range(10):
-        grid = nca(grid)
+    number_channels = 12
+    number_hidden = 96
+    number_filters = 4
+    batch_size = 2
+    max_ca_steps = 30
+    lr = 1e-3
+    exp_tag = "temp"
+
+    nca = NCA(number_channels=number_channels, number_hidden=number_hidden, \
+        number_filters=number_filters)
+
+    exp_log = nca.fit(target, max_steps=20, max_ca_steps=max_ca_steps, lr = lr, exp_tag=exp_tag, batch_size=batch_size)
 
     print("OK")
 

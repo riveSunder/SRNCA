@@ -83,7 +83,6 @@ class TestNCA(unittest.TestCase):
 
         self.assertTrue(find_log)
         self.assertTrue(find_params)
-        import pdb; pdb.set_trace()
         os.system(f"rm {os.path.split(this_filepath)[0]}/temp*_log_dict.npy")
         os.system(f"rm {os.path.split(this_filepath)[0]}/temp*.pt")
 
