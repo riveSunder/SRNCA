@@ -1,4 +1,6 @@
 import time
+import argparse
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -207,23 +209,39 @@ class NCA(nn.Module):
         
 if __name__ == "__main__": #pragma: no cover
 
+    parser = argparse.ArgumentParser()
+    
+    parser.add_argument("-b", "--batch_size", type=int, default=2)
+    parser.add_argument("-c", "--number_channels", type=int, default=9)
+    parser.add_argument("-f", "--number_filters", type=int, default=5)
+    parser.add_argument("-l", "--learning_rate", type=float, default=1e-3)
+    parser.add_argument("-n", "--number_hidden", type=int, default=96)
+    parser.add_argument("-s", "--ca_steps", type=int, default=20,\
+            help="max number of ca steps to take before calculating loss")
+    parser.add_argument("-t", "--exp_tag", type=str, default="temp_delete")
+    parser.add_argument("-u", "--updates", type=int, default=16, \
+            help="total number of update steps to train")
+
     url = "https://www.nasa.gov/centers/ames/images/content/72511main_cellstructure8.jpeg"
 
     img = read_image(url, max_size=128)[:,:,:3]
     target = image_to_tensor(img)
 
-    number_channels = 12
-    number_hidden = 96
-    number_filters = 4
-    batch_size = 2
-    max_ca_steps = 30
-    lr = 1e-3
-    exp_tag = "temp"
+    args = parser.parse_args()
+
+    number_channels = args.number_channels
+    number_hidden = args.number_hidden
+    number_filters = args.number_filters
+    batch_size = args.batch_size
+    max_ca_steps = args.ca_steps
+    lr = args.learning_rate
+    exp_tag = args.exp_tag
+    max_steps = args.updates
 
     nca = NCA(number_channels=number_channels, number_hidden=number_hidden, \
         number_filters=number_filters)
 
-    exp_log = nca.fit(target, max_steps=20, max_ca_steps=max_ca_steps, lr = lr, exp_tag=exp_tag, batch_size=batch_size)
+    exp_log = nca.fit(target, max_steps=max_steps, max_ca_steps=max_ca_steps, lr = lr, exp_tag=exp_tag, batch_size=batch_size)
 
     print("OK")
 

@@ -87,6 +87,40 @@ class TestNCA(unittest.TestCase):
         os.system(f"rm {os.path.split(this_filepath)[0]}/temp*.pt")
 
 
+    def test_command_line(self):
+
+        this_filepath = os.path.realpath(__file__)
+        this_dir = os.path.split(this_filepath)[0]
+
+        dir_list_0 = os.listdir(this_dir)
+        test_tag = "test_delete"
+
+        exp_tag = os.path.join(this_dir, test_tag)
+
+        my_cmd = f"python -m srnca.nca -t {exp_tag} -u 2"
+        os.system(my_cmd)
+
+        dir_list_1 = os.listdir(this_dir)
+
+        self.assertGreater(len(dir_list_1), len(dir_list_0))
+        
+        check_pt = False
+        check_npy = False
+
+        for elem in dir_list_1:
+            if test_tag in elem and elem.endswith("npy"):
+                check_npy = True
+            if test_tag in elem and elem.endswith("pt"):
+                check_pt = True
+
+        self.assertTrue(check_npy)
+        self.assertTrue(check_pt)
+
+        cleanup_command = f"rm {exp_tag}*"
+        os.system(cleanup_command)
+
+
+        
 
 if __name__ == "__main__": #pragma: no cover
 
