@@ -16,7 +16,7 @@ class TestNCA(unittest.TestCase):
 
         for hidden in [2,8,32,64]:
             for channels in [1,3,5,15]:
-                for filters in [3,4,5]:
+                for filters in [3,4,5, 15]:
 
                     expected_value = channels * hidden * filters \
                             +  hidden + hidden*channels
@@ -53,14 +53,74 @@ class TestNCA(unittest.TestCase):
 
         os.system(my_command)
 
+    def test_to_device(self):
+
+        nca = NCA()
+        nca.to_device("cpu")
+        nca.to_device("cuda")
+        
+
     def test_fit(self):
 
         nca = NCA(number_channels=3)
 
         target = torch.rand(1,3,64,64)
 
-        nca.fit(target, max_steps=3, lr=1e-3, max_ca_steps=16, batch_size=4)
+        this_filepath = os.path.realpath(__file__)
+        temp_tag = os.path.split(this_filepath)[0]
 
+        temp_tag = os.path.join(temp_tag, "temp")
+        nca.fit(target, max_steps=3, lr=1e-3, max_ca_steps=16, batch_size=4, exp_tag=temp_tag)
+
+
+        find_log = False
+        find_params = False
+        for elem in os.listdir(os.path.split(this_filepath)[0]):
+            if elem.startswith("temp") and elem.endswith(".npy"):
+                find_log = True
+            if elem.startswith("temp") and elem.endswith(".pt"):
+                find_params = True
+
+        self.assertTrue(find_log)
+        self.assertTrue(find_params)
+        os.system(f"rm {os.path.split(this_filepath)[0]}/temp*_log_dict.npy")
+        os.system(f"rm {os.path.split(this_filepath)[0]}/temp*.pt")
+
+
+    def test_command_line(self):
+
+        this_filepath = os.path.realpath(__file__)
+        this_dir = os.path.split(this_filepath)[0]
+
+        dir_list_0 = os.listdir(this_dir)
+        test_tag = "test_delete"
+
+        exp_tag = os.path.join(this_dir, test_tag)
+
+        my_cmd = f"python -m srnca.nca -t {exp_tag} -u 2"
+        os.system(my_cmd)
+
+        dir_list_1 = os.listdir(this_dir)
+
+        self.assertGreater(len(dir_list_1), len(dir_list_0))
+        
+        check_pt = False
+        check_npy = False
+
+        for elem in dir_list_1:
+            if test_tag in elem and elem.endswith("npy"):
+                check_npy = True
+            if test_tag in elem and elem.endswith("pt"):
+                check_pt = True
+
+        self.assertTrue(check_npy)
+        self.assertTrue(check_pt)
+
+        cleanup_command = f"rm {exp_tag}*"
+        os.system(cleanup_command)
+
+
+        
 
 if __name__ == "__main__": #pragma: no cover
 
