@@ -39,7 +39,7 @@ soft_clamp = lambda x: 1.0 / (1.0 + torch.exp(-4.0 * (x-0.5)))
 
 class NCA(nn.Module):
 
-    def __init__(self, number_channels=1, number_filters=5, number_hidden=32, device="cpu"):
+    def __init__(self, number_channels=1, number_filters=5, number_hidden=32, device="cpu", update_rate=0.5):
         super().__init__()
 
         self.number_channels = number_channels
@@ -69,7 +69,7 @@ class NCA(nn.Module):
         self.max_value = 1.0
         self.min_value = 0.0
 
-        self.update_rate = 0.9
+        self.update_rate = update_rate
 
         self.squash = soft_clamp
 
@@ -129,6 +129,7 @@ class NCA(nn.Module):
         my_training["batch_size"] = batch_size
         my_training["number_channels"] = self.number_channels
         my_training["number_hidden_channels"] = self.number_hidden
+        my_training["update_rate"] = self.update_rate
 
         my_training["step"] = []
         my_training["loss"] = []
@@ -211,6 +212,7 @@ if __name__ == "__main__": #pragma: no cover
 
     parser = argparse.ArgumentParser()
     
+    parser.add_argument("-a", "--all_steps", type=int, default=16, \
     parser.add_argument("-b", "--batch_size", type=int, default=2)
     parser.add_argument("-c", "--number_channels", type=int, default=9)
     parser.add_argument("-f", "--number_filters", type=int, default=5)
@@ -218,8 +220,8 @@ if __name__ == "__main__": #pragma: no cover
     parser.add_argument("-n", "--number_hidden", type=int, default=96)
     parser.add_argument("-s", "--ca_steps", type=int, default=20,\
             help="max number of ca steps to take before calculating loss")
+    parser.add_argument("-u", "--update_rate", type=float, default=0.5, \
     parser.add_argument("-t", "--exp_tag", type=str, default="temp_delete")
-    parser.add_argument("-u", "--updates", type=int, default=16, \
             help="total number of update steps to train")
 
     url = "https://www.nasa.gov/centers/ames/images/content/72511main_cellstructure8.jpeg"
@@ -236,7 +238,8 @@ if __name__ == "__main__": #pragma: no cover
     max_ca_steps = args.ca_steps
     lr = args.learning_rate
     exp_tag = args.exp_tag
-    max_steps = args.updates
+    max_steps = args.all_steps
+    update_rate = args.update_rate
 
     nca = NCA(number_channels=number_channels, number_hidden=number_hidden, \
         number_filters=number_filters)

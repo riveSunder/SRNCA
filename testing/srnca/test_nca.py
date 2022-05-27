@@ -97,7 +97,7 @@ class TestNCA(unittest.TestCase):
 
         exp_tag = os.path.join(this_dir, test_tag)
 
-        my_cmd = f"python -m srnca.nca -t {exp_tag} -u 2"
+        my_cmd = f"python -m srnca.nca -t {exp_tag} -a 2"
         os.system(my_cmd)
 
         dir_list_1 = os.listdir(this_dir)
