@@ -162,7 +162,7 @@ class NCA(nn.Module):
             
             grids[batch_index] = x.detach()
 
-            if step % display_every == 0:
+            if step % display_every == 0 or step == (max_steps-1):
                 print(f"loss at step {step} = {loss:.4e}")
             
             my_training["loss"].append(loss.item())
@@ -186,7 +186,7 @@ class NCA(nn.Module):
 
         
         if "cuda" in torch.device(my_device).type:
-            print("") if "cpu" == torch.device(my_device).type else \
+            print("") if torch.cuda.is_available() else \
                     print(f"warning, cuda not found but {my_device} specified, falling back to cpu")
             self.my_device = torch.device(my_device) if torch.cuda.is_available() else torch.device("cpu")
         else:
