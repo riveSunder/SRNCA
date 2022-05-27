@@ -212,7 +212,7 @@ if __name__ == "__main__": #pragma: no cover
 
     parser = argparse.ArgumentParser()
     
-    parser.add_argument("-a", "--all_steps", type=int, default=16, \
+    parser.add_argument("-a", "--all_steps", type=int, default=16, )
     parser.add_argument("-b", "--batch_size", type=int, default=2)
     parser.add_argument("-c", "--number_channels", type=int, default=9)
     parser.add_argument("-f", "--number_filters", type=int, default=5)
@@ -220,9 +220,8 @@ if __name__ == "__main__": #pragma: no cover
     parser.add_argument("-n", "--number_hidden", type=int, default=96)
     parser.add_argument("-s", "--ca_steps", type=int, default=20,\
             help="max number of ca steps to take before calculating loss")
-    parser.add_argument("-u", "--update_rate", type=float, default=0.5, \
+    parser.add_argument("-u", "--update_rate", type=float, default=0.5 )
     parser.add_argument("-t", "--exp_tag", type=str, default="temp_delete")
-            help="total number of update steps to train")
 
     url = "https://www.nasa.gov/centers/ames/images/content/72511main_cellstructure8.jpeg"
 
