@@ -38,16 +38,10 @@ def compute_grams(imgs, device="cpu"):
     style_layers = [1, 6, 11, 18, 25]  
     vgg16.to(torch.device(device))
     
-    # from https://github.com/google-research/self-organising-systems
-    # no idea why
-    # -> removed, left as comment as a reminder to look into it.
-    #mean = torch.tensor([0.485, 0.456, 0.406])[:,None,None]
-    #std = torch.tensor([0.229, 0.224, 0.225])[:,None,None]
 
     img_mean = (1e-9 + imgs).mean(dim=(0,2,3))[None,:,None, None]
 
-    #x = (imgs-img_mean) / imgs.std()
-    x = imgs #(imgs - 0.445) / 0.226
+    x = imgs
     
     grams = []
 
@@ -57,7 +51,7 @@ def compute_grams(imgs, device="cpu"):
         torch.manual_seed(42)
         w_adapter = torch.rand( 3, x.shape[1], 1,1, device=torch.device(device)) #3, 3)
 
-        x = F.conv2d(x, w_adapter) #, padding=1, padding_mode="circular")
+        x = F.conv2d(x, w_adapter) 
 
         torch.manual_seed(restore_seed)
 
@@ -109,15 +103,15 @@ def image_to_tensor(img, device="cpu"):
         my_tensor = torch.tensor(img.transpose(2,0,1)[np.newaxis,...], \
                 device=torch.device(device))
     
-    return my_tensor#.to(torch.device(device))
+    return my_tensor
 
 def tensor_to_image(my_tensor, index=0):
 
     if my_tensor.shape[1] == 1:
-        # rgb or rgba images, convert to rgb
+        # monochrome images
         img = my_tensor[index,0,:,:].detach().cpu().numpy()
     else:
-        # monochrome images
+        # rgb or rgba images, convert to rgb
         img = my_tensor[index,:3,:,:].permute(1,2,0).detach().cpu().numpy()
 
     return img

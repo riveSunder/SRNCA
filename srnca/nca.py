@@ -91,7 +91,7 @@ class NCA(nn.Module):
         
         temp = torch.zeros(batch_size, self.number_channels, dim, dim, \
                 device=self.my_device)
-        #temp = temp.to(self.my_device)
+        
 
         return temp
 
