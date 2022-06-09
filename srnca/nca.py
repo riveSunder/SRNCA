@@ -44,14 +44,19 @@ class NCA(nn.Module):
 
         self.number_channels = number_channels
         self.number_hidden = number_hidden
-
+        self.update_rate = update_rate
+        self.number_filters = number_filters 
         self.my_device = torch.device(device)
+        
+        self.initialize_model()
+
+    def initialize_model(self):
 
         self.filters = torch.stack([identity, laplacian, sobel_h, sobel_w, \
-                moore][:min([5, number_filters])])
+                moore][:min([5, self.number_filters])])
 
         # max filters is 20
-        number_filters = min([number_filters, 20])
+        number_filters = min([self.number_filters, 20])
         while self.filters.shape[0] < number_filters:
             self.filters = torch.cat([self.filters, torch.randn_like(self.filters[0:1])])
 
@@ -68,8 +73,6 @@ class NCA(nn.Module):
         self.dt = 1.0
         self.max_value = 1.0
         self.min_value = 0.0
-
-        self.update_rate = update_rate
 
         self.squash = soft_clamp
 
@@ -208,6 +211,72 @@ class NCA(nn.Module):
 
         self.load_state_dict(state_dict)
         
+class NCCA(NCA):
+    """
+    filter kernels are learnable and can be any size
+    """
+
+    def __init__(self, number_channels=1, number_filters=1, filter_dim=31, number_hidden=32, device="cpu", update_rate=0.5):
+
+        self.filter_dim = filter_dim
+        super().__init__(number_channels, number_filters, number_hidden, device, update_rate)
+        
+    def initialize_model(self):
+
+        my_filter = torch.randn(1, self.filter_dim, \
+                self.filter_dim)
+        self.filters = torch.stack([my_filter])
+
+        # max filters is 20
+        number_filters = min([self.number_filters, 20])
+        while self.filters.shape[0] < number_filters:
+            self.filters = torch.cat([self.filters, torch.randn_like(self.filters[0:1])])
+
+
+        padding = (self.filter_dim - 1) // 2 
+        self.neighborhood_layer = nn.Conv2d(self.number_channels, \
+                self.number_filters, \
+                self.filter_dim, padding=padding, \
+                padding_mode ="circular", bias=False)
+
+
+        for param in self.neighborhood_layer.named_parameters():
+            param[1].requires_grad = False
+            param[1][:] = self.filters.detach().clone()
+            param[1].requires_grad = True
+
+        self.number_filters = self.filters.shape[0]
+        self.conv_0 = nn.Conv2d(self.number_channels * self.number_filters, \
+                self.number_hidden, kernel_size=1)
+        self.conv_1 = nn.Conv2d(self.number_hidden, self.number_channels, \
+                kernel_size=1, bias=False)
+
+        self.conv_1.weight.data.zero_()
+
+        self.to_device(self.my_device)
+
+        self.dt = 1.0
+        self.max_value = 1.0
+        self.min_value = 0.0
+
+        self.squash = soft_clamp
+
+    def forward(self, grid):
+    
+        update_mask = (torch.rand_like(grid, device=self.my_device) < self.update_rate) * 1.0
+
+        perception = self.neighborhood_layer(grid)
+
+        new_grid = self.conv_0(perception)
+        new_grid = self.conv_1(new_grid)
+        
+        new_grid = grid + self.dt * new_grid * update_mask
+
+        return self.squash(new_grid)
+
+    def fit(self):
+        pass
+
 if __name__ == "__main__": #pragma: no cover
 
     parser = argparse.ArgumentParser()
