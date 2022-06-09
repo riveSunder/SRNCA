@@ -4,15 +4,15 @@ import unittest
 
 import numpy as np
 import torch
-from srnca.nca import NCA
+from srnca.nca import NCA, NCCA
 
 class TestNCA(unittest.TestCase):
 
     def setUp(self):
-        pass
+        self.nca_0 = NCA()
+        self.nca_1 = NCA()
 
     def test_count_parameters(self):
-        
 
         for hidden in [2,8,32,64]:
             for channels in [1,3,5,15]:
@@ -31,19 +31,16 @@ class TestNCA(unittest.TestCase):
 
     def test_save_parameters(self):
         
-        nca_0 = NCA()
-        nca_1 = NCA()
-        
         root_path = os.path.join(os.path.split(\
                 os.path.split(\
                 os.path.split(os.path.abspath(__file__))[0])[0])[0])
         save_path = os.path.join(root_path, "parameters", "temp_test.pt")
 
-        nca_0.save_parameters(save_path)
+        self.nca_0.save_parameters(save_path)
 
-        nca_1.load_parameters(save_path)
+        self.nca_1.load_parameters(save_path)
 
-        for param_0, param_1 in zip(nca_0.parameters(), nca_1.parameters()):
+        for param_0, param_1 in zip(self.nca_0.parameters(), self.nca_1.parameters()):
             
             self.assertTrue(\
                     np.allclose(param_0.detach().numpy(), \
@@ -55,9 +52,8 @@ class TestNCA(unittest.TestCase):
 
     def test_to_device(self):
 
-        nca = NCA()
-        nca.to_device("cpu")
-        nca.to_device("cuda")
+        self.nca_0.to_device("cpu")
+        self.nca_0.to_device("cuda")
         
 
     def test_fit(self):
@@ -118,9 +114,42 @@ class TestNCA(unittest.TestCase):
 
         cleanup_command = f"rm {exp_tag}*"
         os.system(cleanup_command)
-
-
         
+class TestNCCA(unittest.TestCase):
+
+    def setUp(self):
+        self.nca_0 = NCCA()
+        self.nca_1 = NCCA()
+
+    def test_count_parameters(self):
+
+        for hidden in [2,8,32,64]:
+            for channels in [1,3,5,15]:
+                for filters in [3,4,5, 15]:
+                    for filter_dim in [9,31,63]:
+
+                        expected_value = filter_dim**2 * filters * channels\
+                                + hidden + hidden * filters * channels\
+                                + hidden * channels
+
+                        nca = NCCA(number_channels=channels, \
+                                number_filters=filters, \
+                                filter_dim=filter_dim, \
+                                number_hidden=hidden) 
+
+                        number_parameters = nca.count_parameters()
+
+                        self.assertEqual(number_parameters, expected_value)
+
+    def test_fit(self):
+        
+        self.nca_0.fit()
+
+    def test_command_line(self):
+        pass
+
+    def test_fit(self):
+        pass
 
 if __name__ == "__main__": #pragma: no cover
 
