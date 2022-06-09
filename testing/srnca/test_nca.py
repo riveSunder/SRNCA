@@ -130,7 +130,8 @@ class TestNCCA(unittest.TestCase):
 
                         expected_value = filter_dim**2 * filters * channels\
                                 + hidden + hidden * filters * channels\
-                                + hidden * channels
+                                + hidden * channels \
+                                + 1
 
                         nca = NCCA(number_channels=channels, \
                                 number_filters=filters, \

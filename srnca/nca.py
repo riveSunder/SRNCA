@@ -216,7 +216,7 @@ class NCCA(NCA):
     filter kernels are learnable and can be any size
     """
 
-    def __init__(self, number_channels=1, number_filters=1, filter_dim=31, number_hidden=32, device="cpu", update_rate=0.5):
+    def __init__(self, number_channels=1, number_filters=1, filter_dim=31, number_hidden=32, device="cpu", update_rate=1.0):
 
         self.filter_dim = filter_dim
         super().__init__(number_channels, number_filters, number_hidden, device, update_rate)
@@ -255,7 +255,7 @@ class NCCA(NCA):
 
         self.to_device(self.my_device)
 
-        self.dt = 1.0
+        self.dt = nn.Parameter(torch.ones(1))
         self.max_value = 1.0
         self.min_value = 0.0
 
@@ -274,9 +274,40 @@ class NCCA(NCA):
 
         return self.squash(new_grid)
 
+    
     def fit(self):
         pass
+        
 
+        #def fit(self, target, max_steps=10, lr=1e-3, max_ca_steps=16, batch_size=8, exp_tag="default_tag"):
+    def fit_mse(self, x, y, update_steps=100, batch_size=8, lr=1e-3, \
+            max_ca_steps=1, exp_tag="default_tag"):
+    
+
+        self.batch_size = batch_size   
+        self.initialize_optimizer(lr=lr, max_steps=update_steps)
+        display_every = min([1, update_steps // 8])
+
+        for step in range(update_steps):
+
+            batch_index = np.random.choice(x.shape[0], self.batch_size)
+            batch_x = x[batch_index]
+
+            self.optimizer.zero_grad()
+
+            for ca_step in range(max_ca_steps):
+                batch_x = self.forward(batch_x)
+
+            loss = torch.mean(torch.abs((y[batch_index] - batch_x)**2))
+
+            loss.backward()
+            self.optimizer.step()
+
+            if step % display_every == 0 or step == (update_steps-1):
+                print(f"loss at step {step} = {loss:.4e}")
+
+
+        
 if __name__ == "__main__": #pragma: no cover
 
     parser = argparse.ArgumentParser()
