@@ -83,7 +83,7 @@ class NCA(nn.Module):
 
         perception = perceive(grid, self.filters)
 
-        new_grid = self.conv_0(perception)
+        new_grid = torch.relu(self.conv_0(perception))
         new_grid = self.conv_1(new_grid)
         
         new_grid = grid + self.dt * new_grid * update_mask
@@ -94,6 +94,8 @@ class NCA(nn.Module):
         
         temp = torch.zeros(batch_size, self.number_channels, dim, dim, \
                 device=self.my_device)
+        #temp = torch.rand(batch_size, self.number_channels, dim, dim, \
+        #        device=self.my_device)
         
 
         return temp
@@ -223,12 +225,15 @@ class NCCA(NCA):
         
     def initialize_model(self):
 
-        my_filter = torch.randn(1, self.filter_dim, \
+        my_filter = torch.rand(1, self.filter_dim, \
                 self.filter_dim)
+        my_filter = my_filter / my_filter.sum()
         self.filters = torch.stack([my_filter])
 
         # max filters is 20
         number_filters = min([self.number_filters, 20])
+
+
         while self.filters.shape[0] < number_filters:
             self.filters = torch.cat([self.filters, torch.randn_like(self.filters[0:1])])
 
@@ -247,19 +252,18 @@ class NCCA(NCA):
 
         self.number_filters = self.filters.shape[0]
         self.conv_0 = nn.Conv2d(self.number_channels * self.number_filters, \
-                self.number_hidden, kernel_size=1)
+                self.number_hidden, kernel_size=1, bias=False)
         self.conv_1 = nn.Conv2d(self.number_hidden, self.number_channels, \
                 kernel_size=1, bias=False)
 
-        self.conv_1.weight.data.zero_()
 
         self.to_device(self.my_device)
 
-        self.dt = nn.Parameter(torch.ones(1))
+        self.dt = nn.Parameter(torch.tensor(0.25))
         self.max_value = 1.0
         self.min_value = 0.0
 
-        self.squash = soft_clamp
+        self.squash = lambda x: torch.clamp(x, 0,1) #np.clip(x, self.min_value, self.max_value) #soft_clamp
 
     def forward(self, grid):
     
@@ -267,7 +271,7 @@ class NCCA(NCA):
 
         perception = self.neighborhood_layer(grid)
 
-        new_grid = self.conv_0(perception)
+        new_grid = torch.relu(self.conv_0(perception))
         new_grid = self.conv_1(new_grid)
         
         new_grid = grid + self.dt * new_grid * update_mask
@@ -286,7 +290,8 @@ class NCCA(NCA):
 
         self.batch_size = batch_size   
         self.initialize_optimizer(lr=lr, max_steps=update_steps)
-        display_every = min([1, update_steps // 8])
+        display_every = max([1, update_steps // 8])
+        transition_weight = 0.01
 
         for step in range(update_steps):
 
@@ -298,13 +303,22 @@ class NCCA(NCA):
             for ca_step in range(max_ca_steps):
                 batch_x = self.forward(batch_x)
 
-            loss = torch.mean(torch.abs((y[batch_index] - batch_x)**2))
+            transition_mask = torch.abs(y[batch_index] - x[batch_index])
+
+            loss = (torch.abs((y[batch_index] - batch_x)**2)) \
+            #        / (y[batch_index]+1e-6))
+
+            loss = loss * (1 + transition_weight*transition_mask)
+            loss = loss.mean()
 
             loss.backward()
             self.optimizer.step()
+            self.lr_scheduler.step()
 
             if step % display_every == 0 or step == (update_steps-1):
                 print(f"loss at step {step} = {loss:.4e}")
+                print(f"transition weight {transition_weight:.3}")
+                transition_weight = min([1.0, transition_weight*1.75])
 
 
         
