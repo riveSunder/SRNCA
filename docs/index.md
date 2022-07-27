@@ -7,3 +7,5 @@
 
 Learned texture progression
 {:style="text-align:center;"}
+
+[Example of another page](./pages/example_page.md)
