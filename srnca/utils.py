@@ -87,6 +87,8 @@ def compute_style_loss(grams_pred, grams_target):
 def read_image(url, max_size=None):
     
     img = sio.imread(url)
+    if len(img.shape) == 2:
+        img = img[:,:,None]
     
     dim_x, dim_y = img.shape[0], img.shape[1]
 
