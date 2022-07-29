@@ -47,3 +47,16 @@ If the tests pass, you can get started with the tutorial notebooks in the `noteb
 
 
 See [coverage.txt](coverage.txt) for the latest `test_commit` coverage.
+
+
+### equations test
+
+Testing equation rendering in GitHub flavored Markdown:
+
+$$
+\frac{\partial u}{\partial t} = r_u \nabla^2 u - uv^2 + f(1-u)
+$$
+
+$$
+\frac{\partial v}{\partial t} = r_v \nabla^2 v + uv^2 - v(f+k)
+$$
