@@ -97,7 +97,7 @@ class NCA(nn.Module):
         dimm = dim // 8
 
         temp[:,:,dim0:dim1, dim0:dim1] = 0.99 \
-                + torch.rand(batch_size, self.number_channels,\
+                + 1e-2 * torch.rand(batch_size, self.number_channels,\
                 dimm, dimm)
         
         return temp
