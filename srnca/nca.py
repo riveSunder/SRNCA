@@ -92,7 +92,14 @@ class NCA(nn.Module):
         temp = torch.zeros(batch_size, self.number_channels, dim, dim, \
                 device=self.my_device)
         
+        dim0 = dim // 2 - dim // 16
+        dim1 = dim // 2 + dim // 16
+        dimm = dim // 8
 
+        temp[:,:,dim0:dim1, dim0:dim1] = 0.99 \
+                + torch.rand(batch_size, self.number_channels,\
+                dimm, dimm)
+        
         return temp
 
     def initialize_optimizer(self, lr, max_steps):
