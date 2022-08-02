@@ -61,16 +61,23 @@ class TestReadImage(unittest.TestCase):
         # file resides in folder two levels down from srnca root
         file_path = os.path.join("/", *os.path.abspath(__file__).split("/")[:-3])
 
-        image_path = os.path.join(file_path, "data", "images", \
-                "jwst_segment_alignment.jpg")
+        image_paths = [os.path.join(file_path, "data", "images", \
+                "jwst_segment_alignment.jpg")]
+
+        image_paths.append(os.path.join(file_path, "data", "images", \
+                "frogs.png"))
 
         for max_size in [32, 64, 96]:
 
-            image_from_file = read_image(image_path, max_size=max_size)
+            image_from_file = read_image(image_paths[0], max_size=max_size)
 
             self.assertTrue(np.alltrue(\
                     image_from_file.shape == np.array([max_size,max_size, 3])))
 
+            image_from_file = read_image(image_paths[1], max_size=max_size)
+
+            self.assertTrue(np.alltrue(\
+                    image_from_file.shape == np.array([max_size, max_size, 1])))
 
 class TestTensorToImage(unittest.TestCase):
 
