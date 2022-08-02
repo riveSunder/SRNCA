@@ -40,9 +40,12 @@ hard_clamp = lambda x: torch.clamp(x, 0, 1.0)
 
 class NCA(nn.Module):
 
-    def __init__(self, number_channels=1, number_filters=5, number_hidden=32, device="cpu", update_rate=0.5, clamp=1):
+    def __init__(self, number_channels=1, number_filters=5, \
+            number_hidden=32, device="cpu", update_rate=0.5, clamp=1,\
+            use_bias=False):
         super().__init__()
 
+        self.use_bias = use_bias
         self.number_channels = number_channels
         self.number_hidden = number_hidden
 
@@ -58,9 +61,9 @@ class NCA(nn.Module):
 
         self.number_filters = self.filters.shape[0]
         self.conv_0 = nn.Conv2d(self.number_channels * self.number_filters, \
-                self.number_hidden, kernel_size=1, bias=False)
+                self.number_hidden, kernel_size=1, bias=self.use_bias)
         self.conv_1 = nn.Conv2d(self.number_hidden, self.number_channels, \
-                kernel_size=1, bias=False)
+                kernel_size=1, bias=self.use_bias)
 
         self.conv_1.weight.data.zero_()
 
