@@ -36,10 +36,11 @@ moore = torch.tensor([[1., 1., 1.],
 
 # Parameters for soft clamp from chakazul
 soft_clamp = lambda x: 1.0 / (1.0 + torch.exp(-4.0 * (x-0.5)))
+hard_clamp = lambda x: torch.clamp(x, 0, 1.0)
 
 class NCA(nn.Module):
 
-    def __init__(self, number_channels=1, number_filters=5, number_hidden=32, device="cpu", update_rate=0.5):
+    def __init__(self, number_channels=1, number_filters=5, number_hidden=32, device="cpu", update_rate=0.5, clamp=1):
         super().__init__()
 
         self.number_channels = number_channels
@@ -71,7 +72,12 @@ class NCA(nn.Module):
 
         self.update_rate = update_rate
 
-        self.squash = soft_clamp
+        if clamp:
+            # hard_clamp avoids spontaneous background activity (output model(0) = 0)
+            self.squash = hard_clamp
+        else:
+            # squashing function is smoother, but cell values are always activated to be > 0
+            self.squash = soft_clamp
 
 
     def forward(self, grid):
