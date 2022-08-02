@@ -1,3 +1,5 @@
+import os
+
 import time
 import argparse
 
@@ -238,13 +240,19 @@ if __name__ == "__main__": #pragma: no cover
             help="max number of ca steps to take before calculating loss")
     parser.add_argument("-u", "--update_rate", type=float, default=0.5 )
     parser.add_argument("-t", "--exp_tag", type=str, default="temp_delete")
+    parser.add_argument("-r", "--url", type=str, default="")
 
-    url = "https://www.nasa.gov/centers/ames/images/content/72511main_cellstructure8.jpeg"
+    
+
+    args = parser.parse_args()
+    if len(args.url) == 0:
+        this_filepath = os.path.realpath(__file__)
+        this_dir = os.path.split(this_filepath)[0]
+        url = os.path.join(os.path.split(this_dir)[0], "data", "images", "frogs.png")
+        
 
     img = read_image(url, max_size=128)[:,:,:3]
     target = image_to_tensor(img)
-
-    args = parser.parse_args()
 
     number_channels = args.number_channels
     number_hidden = args.number_hidden
