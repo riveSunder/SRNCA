@@ -165,7 +165,7 @@ class NCA(nn.Module):
 
             self.optimizer.zero_grad()
 
-            for ca_step in range(np.random.randint(10, max_ca_steps)):
+            for ca_step in range(np.random.randint(max_ca_steps//2, max_ca_steps)):
                 x = self.forward(x)
 
             grams_pred = compute_grams(x, device=self.my_device)
