@@ -57,7 +57,7 @@ class NCA(nn.Module):
 
         self.number_filters = self.filters.shape[0]
         self.conv_0 = nn.Conv2d(self.number_channels * self.number_filters, \
-                self.number_hidden, kernel_size=1)
+                self.number_hidden, kernel_size=1, bias=False)
         self.conv_1 = nn.Conv2d(self.number_hidden, self.number_channels, \
                 kernel_size=1, bias=False)
 
