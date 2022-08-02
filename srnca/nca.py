@@ -1,3 +1,5 @@
+import os
+
 import time
 import argparse
 
@@ -36,12 +38,16 @@ moore = torch.tensor([[1., 1., 1.],
 
 # Parameters for soft clamp from chakazul
 soft_clamp = lambda x: 1.0 / (1.0 + torch.exp(-4.0 * (x-0.5)))
+hard_clamp = lambda x: torch.clamp(x, 0, 1.0)
 
 class NCA(nn.Module):
 
-    def __init__(self, number_channels=1, number_filters=5, number_hidden=32, device="cpu", update_rate=0.5):
+    def __init__(self, number_channels=1, number_filters=5, \
+            number_hidden=32, device="cpu", update_rate=0.5, clamp=1,\
+            use_bias=False):
         super().__init__()
 
+        self.use_bias = use_bias
         self.number_channels = number_channels
         self.number_hidden = number_hidden
 
@@ -57,9 +63,9 @@ class NCA(nn.Module):
 
         self.number_filters = self.filters.shape[0]
         self.conv_0 = nn.Conv2d(self.number_channels * self.number_filters, \
-                self.number_hidden, kernel_size=1, bias=False)
+                self.number_hidden, kernel_size=1, bias=self.use_bias)
         self.conv_1 = nn.Conv2d(self.number_hidden, self.number_channels, \
-                kernel_size=1, bias=False)
+                kernel_size=1, bias=self.use_bias)
 
         self.conv_1.weight.data.zero_()
 
@@ -71,7 +77,12 @@ class NCA(nn.Module):
 
         self.update_rate = update_rate
 
-        self.squash = soft_clamp
+        if clamp:
+            # hard_clamp avoids spontaneous background activity (output model(0) = 0)
+            self.squash = hard_clamp
+        else:
+            # squashing function is smoother, but cell values are always activated to be > 0
+            self.squash = soft_clamp
 
 
     def forward(self, grid):
@@ -229,13 +240,19 @@ if __name__ == "__main__": #pragma: no cover
             help="max number of ca steps to take before calculating loss")
     parser.add_argument("-u", "--update_rate", type=float, default=0.5 )
     parser.add_argument("-t", "--exp_tag", type=str, default="temp_delete")
+    parser.add_argument("-r", "--url", type=str, default="")
 
-    url = "https://www.nasa.gov/centers/ames/images/content/72511main_cellstructure8.jpeg"
+    
+
+    args = parser.parse_args()
+    if len(args.url) == 0:
+        this_filepath = os.path.realpath(__file__)
+        this_dir = os.path.split(this_filepath)[0]
+        url = os.path.join(os.path.split(this_dir)[0], "data", "images", "frogs.png")
+        
 
     img = read_image(url, max_size=128)[:,:,:3]
     target = image_to_tensor(img)
-
-    args = parser.parse_args()
 
     number_channels = args.number_channels
     number_hidden = args.number_hidden
