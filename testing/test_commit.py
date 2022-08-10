@@ -1,7 +1,5 @@
 import os
 
-from testing.srnca import test_nca
-
 
 def test_commit(): #pragma: no cover
 
