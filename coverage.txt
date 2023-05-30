@@ -1,8 +1,11 @@
-Name                  Stmts   Miss  Cover
------------------------------------------
-srnca/__init__.py         0      0   100%
-srnca/nca.py            122    115     6%
-testing/__init__.py       0      0   100%
-testing/test_all.py       9      4    56%
------------------------------------------
-TOTAL                   131    119     9%
+Name                          Stmts   Miss  Cover
+-------------------------------------------------
+srnca/__init__.py                 0      0   100%
+srnca/nca.py                    122      0   100%
+srnca/utils.py                   71      0   100%
+testing/__init__.py               0      0   100%
+testing/srnca/test_nca.py        71      0   100%
+testing/srnca/test_utils.py      74      0   100%
+testing/test_all.py               9      0   100%
+-------------------------------------------------
+TOTAL                           347      0   100%
